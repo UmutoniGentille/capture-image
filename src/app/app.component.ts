@@ -9,43 +9,68 @@ import { ToastrService } from 'ngx-toastr';
 })
 export class AppComponent {
   recording: boolean = false;
+  mediaStream!: MediaStream;
   mediaRecorder!: MediaRecorder;
   chunks: Blob[] = [];
   @ViewChild('videoPlayer') videoPlayer!: ElementRef;
 
   constructor(private toastr: ToastrService) { }
 
-  startRecording() {
+  async startRecording() {
     this.recording = true;
     this.chunks = [];
 
-    navigator.mediaDevices.getDisplayMedia({ video: true, audio: true })
-      .then(stream => {
-        this.mediaRecorder = new MediaRecorder(stream);
-        this.mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            this.chunks.push(event.data);
-          }
-        };
-        this.mediaRecorder.onstop = () => {
-          const blob = new Blob(this.chunks, { type: 'video/webm' });
-          this.chunks = [];
-          this.recording = false;
+    try {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      const screenDevice = devices.find(device => device.kind === 'videoinput');
 
-          // Show a success toast
-          this.toastr.success('Recording saved!');
-
-          // Set the recorded video as the source for the video player
-          const videoUrl = URL.createObjectURL(blob);
-          this.videoPlayer.nativeElement.src = videoUrl;
-        };
-
-        this.mediaRecorder.start();
-      })
-      .catch(error => {
-        this.toastr.error('Error accessing screen recording: ' + error);
+      if (!screenDevice) {
+        this.toastr.error('Screen capture device not found');
         this.recording = false;
-      });
+        return;
+      }
+
+      const constraints: MediaStreamConstraints = {
+        video: {
+          deviceId: screenDevice.deviceId,
+          width: { ideal: window.innerWidth },
+          height: { ideal: window.innerHeight }
+        },
+        audio: true
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      this.mediaStream = stream;
+      this.mediaRecorder = new MediaRecorder(stream);
+      this.mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          this.chunks.push(event.data);
+        }
+      };
+      this.mediaRecorder.onstop = () => {
+        const blob = new Blob(this.chunks, { type: 'video/webm' });
+        this.chunks = [];
+        this.recording = false;
+
+        // Show a success toast
+        this.toastr.success('Recording saved!');
+
+        // Set the recorded video as the source for the video player
+        const videoUrl = URL.createObjectURL(blob);
+        this.videoPlayer.nativeElement.src = videoUrl;
+
+        // Stop the media tracks
+        this.stopMediaTracks();
+      };
+
+      // Show a notification to the user
+      this.toastr.info('Screen is being captured.');
+
+      this.mediaRecorder.start();
+    } catch (error) {
+      this.toastr.error('Error accessing screen recording: ' + error);
+      this.recording = false;
+    }
   }
 
   stopRecording() {
@@ -54,14 +79,11 @@ export class AppComponent {
     }
   }
 
-  captureScreen() {
-    const canvas = document.createElement('canvas');
-    const context = canvas.getContext('2d');
-    const videoPlayer = this.videoPlayer.nativeElement;
-    canvas.width = videoPlayer.videoWidth;
-    canvas.height = videoPlayer.videoHeight;
-    context!.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-    const imageUrl = canvas.toDataURL('image/png');
-    console.log('Captured screen:', imageUrl);
+  stopMediaTracks() {
+    if (this.mediaStream) {
+      this.mediaStream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
   }
 }
