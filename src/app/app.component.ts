@@ -1,6 +1,6 @@
-import { Component,  ElementRef, ViewChild } from '@angular/core';
-import { ToastrService } from 'ngx-toastr';
-
+import { Component,  ElementRef, ViewChild, NgZone } from '@angular/core';
+import { NgxCaptureService } from 'ngx-capture';
+import { tap } from 'rxjs/operators';
 
 @Component({
   selector: 'app-root',
@@ -8,82 +8,49 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./app.component.css']
 })
 export class AppComponent {
-  recording: boolean = false;
-  mediaStream!: MediaStream;
-  mediaRecorder!: MediaRecorder;
-  chunks: Blob[] = [];
-  @ViewChild('videoPlayer') videoPlayer!: ElementRef;
+  name = 'Angular';
+  img = '';
 
-  constructor(private toastr: ToastrService) { }
+  body = document.body;
 
-  async startRecording() {
-    this.recording = true;
-    this.chunks = [];
+  @ViewChild('screen', { static: true }) screen: any;
 
-    try {
-      const devices = await navigator.mediaDevices.enumerateDevices();
-      const screenDevice = devices.find(device => device.kind === 'videoinput');
+  constructor(private captureService: NgxCaptureService) {}
 
-      if (!screenDevice) {
-        this.toastr.error('Screen capture device not found');
-        this.recording = false;
-        return;
-      }
-
-      const constraints: MediaStreamConstraints = {
-        video: {
-          deviceId: screenDevice.deviceId,
-          width: { ideal: window.innerWidth },
-          height: { ideal: window.innerHeight }
-        },
-        audio: true
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      this.mediaStream = stream;
-      this.mediaRecorder = new MediaRecorder(stream);
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          this.chunks.push(event.data);
-        }
-      };
-      this.mediaRecorder.onstop = () => {
-        const blob = new Blob(this.chunks, { type: 'video/webm' });
-        this.chunks = [];
-        this.recording = false;
-
-        // Show a success toast
-        this.toastr.success('Recording saved!');
-
-        // Set the recorded video as the source for the video player
-        const videoUrl = URL.createObjectURL(blob);
-        this.videoPlayer.nativeElement.src = videoUrl;
-
-        // Stop the media tracks
-        this.stopMediaTracks();
-      };
-
-      // Show a notification to the user
-      this.toastr.info('Screen is being captured.');
-
-      this.mediaRecorder.start();
-    } catch (error) {
-      this.toastr.error('Error accessing screen recording: ' + error);
-      this.recording = false;
-    }
+  ngOnInit() {}
+  divCapture() {
+    this.captureService
+      .getImage(this.screen.nativeElement, true)
+      .pipe(
+        tap((img: string) => {
+          this.img = img;
+          console.log(img);
+        })
+      )
+      .subscribe();
+  }
+  fullCapture() {
+    this.captureService
+      .getImage(this.body, true)
+      .pipe(
+        tap((img: string) => {
+          this.img = img;
+          console.log(img);
+        })
+      )
+      .subscribe();
   }
 
-  stopRecording() {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-    }
-  }
-
-  stopMediaTracks() {
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach(track => {
-        track.stop();
-      });
-    }
+  fullCaptureWithDownload() {
+    this.captureService
+      .getImage(this.body, true)
+      .pipe(
+        tap((img: string) => {
+          this.img = img;
+          console.log(img);
+        }),
+        tap((img) => this.captureService.downloadImage(img))
+      )
+      .subscribe();
   }
 }

@@ -1,4 +1,26 @@
-<button (click)="startRecording()" [disabled]="recording">Start Recording</button>
-<button (click)="stopRecording()" [disabled]="!recording">Stop Recording</button>
-<video #videoPlayer controls></video>
-<!-- <button (click)="captureScreen()">Capture Screen</button> -->
+<div #screen>
+  <p>
+    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo ligula
+    ut metus volutpat, non congue elit ornare. Phasellus viverra gravida justo,
+    et gravida nulla tincidunt ut. Sed condimentum vehicula nulla sit amet
+    rhoncus. Ut tincidunt libero rhoncus eleifend mollis. Proin mollis tortor
+    vel odio tempor, a sodales nisl hendrerit. Ut velit orci, feugiat non
+    placerat id, sollicitudin quis purus. Phasellus vulputate ipsum in nibh
+    sodales, sed vehicula magna sagittis. Donec in tempus libero.
+  </p>
+  <p>Start editing to see some magic happen :)</p>
+  <div class="block"></div>
+</div>
+
+<br /><br /><br />
+<hr />
+
+<button (click)="divCapture()">DIV capture</button>
+<br />
+<br />
+<button (click)="fullCapture()">Full BODY capture</button>
+<br />
+<br />
+<button (click)="fullCaptureWithDownload()">Full BODY capture & Download</button>
+<h2>My Capture:</h2>
+<img src="{{ img }}" />
