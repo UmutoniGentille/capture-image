@@ -1,6 +1,5 @@
 import { Component,  ElementRef, ViewChild, NgZone } from '@angular/core';
-import { NgxCaptureService } from 'ngx-capture';
-import { tap } from 'rxjs/operators';
+import html2canvas from 'html2canvas';
 
 @Component({
   selector: 'app-root',
@@ -11,46 +10,42 @@ export class AppComponent {
   name = 'Angular';
   img = '';
 
-  body = document.body;
+  @ViewChild('screen', { static: true }) screen!: ElementRef;
 
-  @ViewChild('screen', { static: true }) screen: any;
+  constructor() {}
 
-  constructor(private captureService: NgxCaptureService) {}
-
-  ngOnInit() {}
   divCapture() {
-    this.captureService
-      .getImage(this.screen.nativeElement, true)
-      .pipe(
-        tap((img: string) => {
-          this.img = img;
-          console.log(img);
-        })
-      )
-      .subscribe();
+    const element = this.screen.nativeElement;
+    html2canvas(element).then((canvas:any) => {
+      const imgData = canvas.toDataURL('image/png');
+      this.img = imgData;
+      console.log(imgData);
+    });
   }
+
   fullCapture() {
-    this.captureService
-      .getImage(this.body, true)
-      .pipe(
-        tap((img: string) => {
-          this.img = img;
-          console.log(img);
-        })
-      )
-      .subscribe();
+    const element = document.body;
+    html2canvas(element).then((canvas:any) => {
+      const imgData = canvas.toDataURL('image/png');
+      this.img = imgData;
+      console.log(imgData);
+    });
   }
 
   fullCaptureWithDownload() {
-    this.captureService
-      .getImage(this.body, true)
-      .pipe(
-        tap((img: string) => {
-          this.img = img;
-          console.log(img);
-        }),
-        tap((img) => this.captureService.downloadImage(img))
-      )
-      .subscribe();
+    const element = document.body;
+    html2canvas(element).then((canvas:any) => {
+      const imgData = canvas.toDataURL('image/png');
+      this.img = imgData;
+      console.log(imgData);
+      this.downloadImage(imgData);
+    });
+  }
+
+  downloadImage(imgData: string) {
+    const link = document.createElement('a');
+    link.href = imgData;
+    link.download = 'screenshot.png';
+    link.click();
   }
 }
