@@ -10,9 +10,5 @@
   <!-- <button class="btn btn-primary" (click)="detectFaces()">Snap Photo</button> -->
 
 </div>
-<h1>Face</h1>
-<div *ngIf="faceDetected">
-  <img [src]="imageUrl" alt="Input Image" />
-  <div *ngFor="let face of detectedFaces" [ngStyle]="getFaceBoxStyle(face)"></div>
-</div>
+
 
