@@ -1,26 +1,18 @@
-<div #screen>
-  <p>
-    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed commodo ligula
-    ut metus volutpat, non congue elit ornare. Phasellus viverra gravida justo,
-    et gravida nulla tincidunt ut. Sed condimentum vehicula nulla sit amet
-    rhoncus. Ut tincidunt libero rhoncus eleifend mollis. Proin mollis tortor
-    vel odio tempor, a sodales nisl hendrerit. Ut velit orci, feugiat non
-    placerat id, sollicitudin quis purus. Phasellus vulputate ipsum in nibh
-    sodales, sed vehicula magna sagittis. Donec in tempus libero.
-  </p>
-  <p>Start editing to see some magic happen :)</p>
-  <div class="block"></div>
+<div class="video-container" *ngIf="!error">
+	<video [class.show]="!isCaptured" [class.hide]="isCaptured" #video id="video" [width]="WIDTH" [height]="HEIGHT"
+		autoplay></video>
+	<canvas [class.show]="isCaptured" [class.hide]="!isCaptured" #canvas id="canvas" [width]="WIDTH"
+		[height]="HEIGHT"></canvas>
 </div>
 
-<br /><br /><br />
-<hr />
+<div class="snap-container">
+	<button class="btn btn-primary"  (click)="capture()">Snap Photo</button>	
+  <!-- <button class="btn btn-primary" (click)="detectFaces()">Snap Photo</button> -->
 
-<button (click)="divCapture()">DIV capture</button>
-<br />
-<br />
-<button (click)="fullCapture()">Full BODY capture</button>
-<br />
-<br />
-<button (click)="fullCaptureWithDownload()">Full BODY capture & Download</button>
-<h2>My Capture:</h2>
-<img src="{{ img }}" />
+</div>
+<h1>Face</h1>
+<div *ngIf="faceDetected">
+  <img [src]="imageUrl" alt="Input Image" />
+  <div *ngFor="let face of detectedFaces" [ngStyle]="getFaceBoxStyle(face)"></div>
+</div>
+
